@@ -13,22 +13,22 @@
         }
 
         :root {
-            --primary-blue: #2563eb;
-            --secondary-green: #10b981;
-            --accent-orange: #f59e0b;
+            --primary-purple: #8b5cf6;
+            --secondary-purple: #a78bfa;
+            --accent-purple: #c4b5fd;
             --warning-red: #ef4444;
             --bg-light: #f8fafc;
-            --bg-dark: #0f172a;
+            --bg-dark: #000000;
             --card-light: #ffffff;
-            --card-dark: #1e293b;
+            --card-dark: #111111;
             --text-light: #1e293b;
             --text-dark: #f1f5f9;
             --border-light: #e2e8f0;
-            --border-dark: #334155;
+            --border-dark: #333333;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Times New Roman', Times, serif;
             background: var(--bg-light);
             color: var(--text-light);
             transition: background 0.3s, color 0.3s;
@@ -86,7 +86,7 @@
         .logo {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-green));
+            background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -99,7 +99,7 @@
         .header-title h1 {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary-blue);
+            color: var(--primary-purple);
         }
 
         .header-title p {
@@ -164,13 +164,13 @@
 
         .nav-item:hover {
             background: var(--bg-light);
-            color: var(--primary-blue);
+            color: var(--primary-purple);
         }
 
         .nav-item.active {
             background: #dbeafe;
-            color: var(--primary-blue);
-            border-left: 3px solid var(--primary-blue);
+            color: var(--primary-purple);
+            border-left: 3px solid var(--primary-purple);
             font-weight: 600;
         }
 
@@ -202,7 +202,7 @@
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            color: var(--primary-blue);
+            color: var(--primary-purple);
         }
 
         .kpi-grid {
@@ -238,11 +238,11 @@
             left: 0;
             width: 4px;
             height: 100%;
-            background: var(--primary-blue);
+            background: var(--primary-purple);
         }
 
-        .kpi-card.green::before { background: var(--secondary-green); }
-        .kpi-card.orange::before { background: var(--accent-orange); }
+        .kpi-card.green::before { background: var(--secondary-purple); }
+        .kpi-card.orange::before { background: var(--accent-purple); }
         .kpi-card.red::before { background: var(--warning-red); }
 
         .kpi-label {
@@ -265,7 +265,7 @@
             gap: 0.25rem;
         }
 
-        .kpi-change.positive { color: var(--secondary-green); }
+        .kpi-change.positive { color: var(--secondary-purple); }
         .kpi-change.negative { color: var(--warning-red); }
 
         .chart-grid {
@@ -366,16 +366,16 @@
 
         .progress-fill {
             height: 100%;
-            background: var(--primary-blue);
+            background: var(--primary-purple);
             transition: width 0.5s ease;
         }
 
-        .progress-fill.green { background: var(--secondary-green); }
-        .progress-fill.orange { background: var(--accent-orange); }
+        .progress-fill.green { background: var(--secondary-purple); }
+        .progress-fill.orange { background: var(--accent-purple); }
         .progress-fill.red { background: var(--warning-red); }
 
         .export-btn {
-            background: var(--primary-blue);
+            background: var(--primary-purple);
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -416,9 +416,9 @@
             background: #334155;
         }
 
-        .alert-item.info { border-color: var(--primary-blue); }
-        .alert-item.success { border-color: var(--secondary-green); }
-        .alert-item.warning { border-color: var(--accent-orange); }
+        .alert-item.info { border-color: var(--primary-purple); }
+        .alert-item.success { border-color: var(--secondary-purple); }
+        .alert-item.warning { border-color: var(--accent-purple); }
         .alert-item.danger { border-color: var(--warning-red); }
 
         .sankey-node {
@@ -821,8 +821,8 @@
                 <div class="card">
                     <h3 class="chart-title">Third-Party Verification</h3>
                     <div style="text-align: center; padding: 2rem;">
-                        <div style="display: inline-block; border: 3px solid var(--secondary-green); border-radius: 12px; padding: 2rem; background: #dcfce7;">
-                            <div style="font-size: 3rem; color: var(--secondary-green);">CHECK</div>
+                        <div style="display: inline-block; border: 3px solid var(--secondary-purple); border-radius: 12px; padding: 2rem; background: #f3e8ff;">
+                            <div style="font-size: 3rem; color: var(--secondary-purple);">CHECK</div>
                             <div style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0; color: #166534;">VERIFIED</div>
                             <div style="font-weight: 600; color: #166534;">GeoVeritas Environmental Inc.</div>
                             <div style="color: #166534; margin-top: 0.5rem;">January 20, 2025</div>
@@ -1183,7 +1183,7 @@
                     labels: ['Combustion', 'Process', 'Fugitive'],
                     datasets: [{
                         data: [totalCombustion, totalProcess, totalFugitive],
-                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                        backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1221,7 +1221,7 @@
                     datasets: [{
                         label: '2024 Captured',
                         data: Object.values(sectorData),
-                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                        backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1322,12 +1322,12 @@
                         {
                             label: 'Combustion',
                             data: combustionByMonth,
-                            backgroundColor: '#2563eb'
+                            backgroundColor: '#8b5cf6'
                         },
                         {
                             label: 'Process',
                             data: processByMonth,
-                            backgroundColor: '#10b981'
+                            backgroundColor: '#a78bfa'
                         }
                     ]
                 },
@@ -1361,7 +1361,7 @@
                     labels: ['CO₂', 'CH₄ (CO₂e)', 'N₂O (CO₂e)'],
                     datasets: [{
                         data: [1150000, 75000, 17500],
-                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                        backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1384,7 +1384,7 @@
                     datasets: [{
                         label: 'CO₂ Flow (tons)',
                         data: [1242500, 1230000, 1055000, 175000],
-                        backgroundColor: ['#2563eb', '#1d4ed8', '#10b981', '#f59e0b']
+                        backgroundColor: ['#8b5cf6', '#1d4ed8', '#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1424,7 +1424,7 @@
                         {
                             label: 'Used',
                             data: [1170000, 780000, 520000],
-                            backgroundColor: '#10b981'
+                            backgroundColor: '#a78bfa'
                         },
                         {
                             label: 'Available',
@@ -1511,7 +1511,7 @@
                     datasets: [{
                         label: 'CO₂ Captured (tons)',
                         data: [588800, 369700, 236800],
-                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                        backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1548,12 +1548,12 @@
                         {
                             label: 'Storage Credits ($85/ton)',
                             data: [21.2, 22.8, 23.5, 24.9],
-                            backgroundColor: '#10b981'
+                            backgroundColor: '#a78bfa'
                         },
                         {
                             label: 'Utilization Credits ($60/ton)',
                             data: [5.4, 5.8, 6.1, 6.5],
-                            backgroundColor: '#f59e0b'
+                            backgroundColor: '#c4b5fd'
                         }
                     ]
                 },
@@ -1595,7 +1595,7 @@
                     labels: ['Storage Credits', 'Utilization Credits'],
                     datasets: [{
                         data: [71, 29],
-                        backgroundColor: ['#10b981', '#f59e0b']
+                        backgroundColor: ['#a78bfa', '#c4b5fd']
                     }]
                 },
                 options: {
@@ -1624,12 +1624,12 @@
                         {
                             label: 'Direct Jobs',
                             data: [245, 187, 142],
-                            backgroundColor: '#2563eb'
+                            backgroundColor: '#8b5cf6'
                         },
                         {
                             label: 'Indirect Jobs',
                             data: [98, 75, 100],
-                            backgroundColor: '#93c5fd'
+                            backgroundColor: '#c4b5fd'
                         }
                     ]
                 },
@@ -1663,7 +1663,7 @@
                     labels: ['Initial Investment', 'OPEX', '45Q Credits', 'CO₂ Sales', 'Net Profit'],
                     datasets: [{
                         data: [-250, -85, 94.2, 28, -212.8],
-                        backgroundColor: ['#ef4444', '#ef4444', '#10b981', '#10b981', '#2563eb']
+                        backgroundColor: ['#ef4444', '#ef4444', '#a78bfa', '#a78bfa', '#8b5cf6']
                     }]
                 },
                 options: {
@@ -1783,7 +1783,7 @@
                     datasets: [{
                         label: 'Production vs Emissions',
                         data: productionData.map((prod, i) => ({ x: prod, y: totalCaptured[i] })),
-                        backgroundColor: '#2563eb'
+                        backgroundColor: '#8b5cf6'
                     }]
                 },
                 options: {
