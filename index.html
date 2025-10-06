@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Louisiana CCUS Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --secondary-green: #10b981;
+            --accent-orange: #f59e0b;
+            --warning-red: #ef4444;
+            --bg-light: #f8fafc;
+            --bg-dark: #0f172a;
+            --card-light: #ffffff;
+            --card-dark: #1e293b;
+            --text-light: #1e293b;
+            --text-dark: #f1f5f9;
+            --border-light: #e2e8f0;
+            --border-dark: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        body.dark-mode .card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        body.dark-mode .header {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        body.dark-mode .sidebar {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        body.dark-mode .nav-item:hover {
+            background: #334155;
+        }
+
+        body.dark-mode select, body.dark-mode input {
+            background: #334155;
+            color: var(--text-dark);
+            border-color: var(--border-dark);
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-green));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .header-title p {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        select, input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid var(--border-light);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 73px;
+            height: calc(100vh - 73px);
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 0.875rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.938rem;
+            color: #64748b;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-light);
+            color: var(--primary-blue);
+        }
+
+        .nav-item.active {
+            background: #dbeafe;
+            color: var(--primary-blue);
+            border-left: 3px solid var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .nav-item-icon {
+            font-size: 1.25rem;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary-blue);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .kpi-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-blue);
+        }
+
+        .kpi-card.green::before { background: var(--secondary-green); }
+        .kpi-card.orange::before { background: var(--accent-orange); }
+        .kpi-card.red::before { background: var(--warning-red); }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-change {
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .kpi-change.positive { color: var(--secondary-green); }
+        .kpi-change.negative { color: var(--warning-red); }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        body.dark-mode .chart-title {
+            color: var(--text-dark);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: var(--bg-light);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-light);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        body.dark-mode th {
+            background: #334155;
+        }
+
+        th:hover {
+            background: #e2e8f0;
+        }
+
+        body.dark-mode th:hover {
+            background: #475569;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.813rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-badge.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.green { background: var(--secondary-green); }
+        .progress-fill.orange { background: var(--accent-orange); }
+        .progress-fill.red { background: var(--warning-red); }
+
+        .export-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .export-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .alert-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 1rem;
+            border-left: 4px solid;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background: var(--bg-light);
+        }
+
+        body.dark-mode .alert-item {
+            background: #334155;
+        }
+
+        .alert-item.info { border-color: var(--primary-blue); }
+        .alert-item.success { border-color: var(--secondary-green); }
+        .alert-item.warning { border-color: var(--accent-orange); }
+        .alert-item.danger { border-color: var(--warning-red); }
+
+        .sankey-node {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                transition: left 0.3s;
+                z-index: 99;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header-title h1 {
+                font-size: 1.125rem;
+            }
+        }
+
+        @media print {
+            .sidebar, .header-right, .filters, .export-btn {
+                display: none;
+            }
+
+            .card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">LA</div>
+            <div class="header-title">
+                <h1>Louisiana CCUS Monitoring Dashboard</h1>
+                <p>Real-time Carbon Capture, Utilization & Storage Analytics</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <input type="date" id="dateStart" value="2024-01-01">
+            <input type="date" id="dateEnd" value="2024-12-31">
+            <select id="facilitySelector">
+                <option value="all">All Facilities</option>
+                <option value="lake-charles">Lake Charles Energy</option>
+                <option value="baton-rouge">Baton Rouge Biofuel</option>
+                <option value="port-allen">Port Allen Pulp & Paper</option>
+            </select>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="nav-item active" onclick="showSection('overview')">
+                <span class="nav-item-icon">📊</span>
+                <span>Overview Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="showSection('emissions')">
+                <span class="nav-item-icon">💨</span>
+                <span>Emissions Data</span>
+            </div>
+            <div class="nav-item" onclick="showSection('infrastructure')">
+                <span class="nav-item-icon">🏗️</span>
+                <span>CCUS Infrastructure</span>
+            </div>
+            <div class="nav-item" onclick="showSection('compliance')">
+                <span class="nav-item-icon">✅</span>
+                <span>Compliance Reports</span>
+            </div>
+            <div class="nav-item" onclick="showSection('economic')">
+                <span class="nav-item-icon">💰</span>
+                <span>Economic Impact</span>
+            </div>
+            <div class="nav-item" onclick="showSection('forecasts')">
+                <span class="nav-item-icon">📈</span>
+                <span>Forecasts & Analytics</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Overview Section -->
+            <div id="overview" class="section active">
+                <h2 class="section-title">Overview Dashboard</h2>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Total CO₂ Captured</div>
+                        <div class="kpi-value">1,242,500 <span style="font-size: 1rem;">tons</span></div>
+                        <div class="kpi-change positive">↑ 18.5% vs 2023</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 82%"></div>
+                        </div>
+                    </div>
+
+                    <div class="card kpi-card green">
+                        <div class="kpi-label">Compliance Status</div>
+                        <div class="kpi-value">96% <span style="font-size: 1rem;">Complete</span></div>
+                        <div class="kpi-change positive">↑ All reports on track</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill green" style="width: 96%"></div>
+                        </div>
+                    </div>
+
+                    <div class="card kpi-card orange">
+                        <div class="kpi-label">45Q Tax Credits Earned</div>
+                        <div class="kpi-value">$94.2M</div>
+                        <div class="kpi-change positive">↑ $12.4M this quarter</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill orange" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Storage Capacity Used</div>
+                        <div class="kpi-value">78% <span style="font-size: 1rem;">of 3.2M tons</span></div>
+                        <div class="kpi-change">2.5M tons stored</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill orange" style="width: 78%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-grid">
+                    <div class="card full-width">
+                        <h3 class="chart-title">CO₂ Capture & Storage Trends (2024)</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Emission Source Breakdown</h3>
+                        <div class="chart-container">
+                            <canvas id="sourcePieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Sector Comparison</h3>
+                        <div class="chart-container">
+                            <canvas id="sectorBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facilities Table -->
+                <div class="card full-width">
+                    <h3 class="chart-title">Facility Status Overview</h3>
+                    <div class="table-container">
+                        <table id="facilitiesTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">Facility Name</th>
+                                    <th onclick="sortTable(1)">Parish</th>
+                                    <th onclick="sortTable(2)">Type</th>
+                                    <th onclick="sortTable(3)">Captured (tons)</th>
+                                    <th onclick="sortTable(4)">Stored (tons)</th>
+                                    <th onclick="sortTable(5)">Compliance</th>
+                                    <th onclick="sortTable(6)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="facilitiesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emissions Section -->
+            <div id="emissions" class="section">
+                <h2 class="section-title">Emissions Data & Analysis</h2>
+
+                <div class="chart-grid">
+                    <div class="card full-width">
+                        <h3 class="chart-title">Monthly Emissions Timeline</h3>
+                        <div class="chart-container">
+                            <canvas id="emissionsTimelineChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Combustion vs Process Emissions</h3>
+                        <div class="chart-container">
+                            <canvas id="emissionTypeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Gas Composition (CO₂e)</h3>
+                        <div class="chart-container">
+                            <canvas id="gasCompositionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <h3 class="chart-title">CO₂ Flow: Capture to Storage (Sankey-style)</h3>
+                        <div class="chart-container">
+                            <canvas id="flowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Section -->
+            <div id="infrastructure" class="section">
+                <h2 class="section-title">CCUS Infrastructure</h2>
+
+                <div class="kpi-grid">
+                    <div class="card kpi-card green">
+                        <div class="kpi-label">Total Storage Capacity</div>
+                        <div class="kpi-value">3.2M <span style="font-size: 1rem;">tons</span></div>
+                        <div class="kpi-change">Across 3 facilities</div>
+                    </div>
+
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Active Pipelines</div>
+                        <div class="kpi-value">12</div>
+                        <div class="kpi-change positive">↑ 100% operational</div>
+                    </div>
+
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Injection Wells</div>
+                        <div class="kpi-value">24</div>
+                        <div class="kpi-change positive">↑ All integrity tests passed</div>
+                    </div>
+
+                    <div class="card kpi-card orange">
+                        <div class="kpi-label">Average Injection Rate</div>
+                        <div class="kpi-value">3,420 <span style="font-size: 1rem;">tons/day</span></div>
+                        <div class="kpi-change positive">↑ 8.2% vs last month</div>
+                    </div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="card">
+                        <h3 class="chart-title">Storage Capacity by Facility</h3>
+                        <div class="chart-container">
+                            <canvas id="capacityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Pipeline Pressure Monitoring</h3>
+                        <div class="chart-container">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <h3 class="chart-title">Geographic Distribution by Parish</h3>
+                        <div class="chart-container">
+                            <canvas id="parishChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoring Stations -->
+                <div class="card full-width">
+                    <h3 class="chart-title">Monitoring Station Status</h3>
+                    <div class="alert-feed">
+                        <div class="alert-item success">
+                            <strong>Station MW-01 (Calcasieu)</strong> - pH 7.2, TDS 450 ppm | ✅ Normal
+                        </div>
+                        <div class="alert-item success">
+                            <strong>Station MW-02 (East Baton Rouge)</strong> - pH 7.4, TDS 430 ppm | ✅ Normal
+                        </div>
+                        <div class="alert-item warning">
+                            <strong>Station MW-03 (Iberville)</strong> - pH 6.8, TDS 520 ppm | ⚠️ Flagged for review
+                        </div>
+                        <div class="alert-item danger">
+                            <strong>Station MW-04 (Calcasieu)</strong> - Offline | ❌ Scheduled maintenance
+                        </div>
+                        <div class="alert-item success">
+                            <strong>Station MW-05 (East Baton Rouge)</strong> - pH 7.3, TDS 445 ppm | ✅ Normal
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Section -->
+            <div id="compliance" class="section">
+                <h2 class="section-title">Compliance & Reporting</h2>
+
+                <div class="kpi-grid">
+                    <div class="card kpi-card green">
+                        <div class="kpi-label">EPA GHGRP</div>
+                        <div class="kpi-value">✅ Submitted</div>
+                        <div class="kpi-change">March 31, 2024</div>
+                    </div>
+
+                    <div class="card kpi-card green">
+                        <div class="kpi-label">Class VI UIC Reports</div>
+                        <div class="kpi-value">✅ Current</div>
+                        <div class="kpi-change">Quarterly reports on time</div>
+                    </div>
+
+                    <div class="card kpi-card orange">
+                        <div class="kpi-label">Next Deadline</div>
+                        <div class="kpi-value">45 days</div>
+                        <div class="kpi-change">Q2 Financial Report</div>
+                    </div>
+
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Report Completion</div>
+                        <div class="kpi-value">96%</div>
+                        <div class="kpi-change positive">↑ On track</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill green" style="width: 96%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Checklist -->
+                <div class="card full-width">
+                    <h3 class="chart-title">Report Validation Status</h3>
+                    <div style="padding: 1rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span>✅ Facility Identification Data</span>
+                                <span class="status-badge success">Complete</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span>✅ CO₂ Volume Records</span>
+                                <span class="status-badge success">Complete</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span>✅ Flow Meter Calibration</span>
+                                <span class="status-badge success">Complete</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span>⚠️ Groundwater Monitoring Samples</span>
+                                <span class="status-badge warning">Pending</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill orange" style="width: 75%"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span>✅ Third-Party Verification</span>
+                                <span class="status-badge success">Complete</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification Status -->
+                <div class="card">
+                    <h3 class="chart-title">Third-Party Verification</h3>
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="display: inline-block; border: 3px solid var(--secondary-green); border-radius: 12px; padding: 2rem; background: #dcfce7;">
+                            <div style="font-size: 3rem; color: var(--secondary-green);">✓</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0; color: #166534;">VERIFIED</div>
+                            <div style="font-weight: 600; color: #166534;">GeoVeritas Environmental Inc.</div>
+                            <div style="color: #166534; margin-top: 0.5rem;">January 20, 2025</div>
+                            <div style="color: #166534; margin-top: 0.5rem;">No discrepancies found</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Economic Section -->
+            <div id="economic" class="section">
+                <h2 class="section-title">Economic Impact & 45Q Credits</h2>
+
+                <div class="kpi-grid">
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Total 45Q Credits (2024)</div>
+                        <div class="kpi-value">$94.2M</div>
+                        <div class="kpi-change positive">↑ 22% vs 2023</div>
+                    </div>
+
+                    <div class="card kpi-card green">
+                        <div class="kpi-label">Jobs Created</div>
+                        <div class="kpi-value">847</div>
+                        <div class="kpi-change positive">↑ Direct & indirect</div>
+                    </div>
+
+                    <div class="card kpi-card orange">
+                        <div class="kpi-label">Average Cost per Ton</div>
+                        <div class="kpi-value">$58</div>
+                        <div class="kpi-change positive">↓ 12% efficiency gain</div>
+                    </div>
+
+                    <div class="card kpi-card">
+                        <div class="kpi-label">Tax Revenue Generated</div>
+                        <div class="kpi-value">$12.4M</div>
+                        <div class="kpi-change positive">↑ State & local</div>
+                    </div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="card">
+                        <h3 class="chart-title">Quarterly 45Q Credits Earned</h3>
+                        <div class="chart-container">
+                            <canvas id="creditsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Storage vs Utilization Credits</h3>
+                        <div class="chart-container">
+                            <canvas id="creditSplitChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <h3 class="chart-title">Job Creation by Parish</h3>
+                        <div class="chart-container">
+                            <canvas id="jobsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <h3 class="chart-title">ROI Analysis (Waterfall)</h3>
+                        <div class="chart-container">
+                            <canvas id="roiChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="export-btn" onclick="exportData('economic')">📊 Export Economic Report</button>
+            </div>
+
+            <!-- Forecasts Section -->
+            <div id="forecasts" class="section">
+                <h2 class="section-title">Forecasts & Predictive Analytics</h2>
+
+                <div class="chart-grid">
+                    <div class="card full-width">
+                        <h3 class="chart-title">Emission Forecasts with Confidence Intervals</h3>
+                        <div class="chart-container">
+                            <canvas id="forecastChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Production-Emission Correlation</h3>
+                        <div class="chart-container">
+                            <canvas id="correlationChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">Efficiency Trends</h3>
+                        <div class="chart-container">
+                            <canvas id="efficiencyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card full-width">
+                    <h3 class="chart-title">AI-Powered Recommendations</h3>
+                    <div class="alert-feed">
+                        <div class="alert-item success">
+                            <strong>Optimization Opportunity:</strong> Increase capture rate at Lake Charles by 8% during off-peak hours. Projected additional revenue: $2.1M annually.
+                        </div>
+                        <div class="alert-item info">
+                            <strong>Maintenance Prediction:</strong> Pipeline LA-089 pressure variance detected. Recommend inspection in 45-60 days.
+                        </div>
+                        <div class="alert-item warning">
+                            <strong>Capacity Alert:</strong> Baton Rouge facility approaching 85% storage capacity. Consider expansion planning.
+                        </div>
+                        <div class="alert-item success">
+                            <strong>Credit Maximization:</strong> Current trajectory to earn $112M in 45Q credits by end of 2025 (+19%).
+                        </div>
+                    </div>
+                </div>
+
+                <button class="export-btn" onclick="exportData('forecasts')">📈 Export Forecast Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATA LAYER ====================
+        // Louisiana CCUS Facilities Data (2023-2025)
+        const facilitiesData = {
+            'lake-charles': {
+                name: 'Lake Charles Energy Plant',
+                parish: 'Calcasieu',
+                type: 'Energy',
+                capacity: 1500000,
+                currentStored: 1170000,
+                monthlyData: [
+                    { month: '2024-01', captured: 45200, injected: 38500, utilized: 6700, combustion: 38000, process: 5200, fugitive: 2000 },
+                    { month: '2024-02', captured: 43800, injected: 37200, utilized: 6600, combustion: 36800, process: 5000, fugitive: 2000 },
+                    { month: '2024-03', captured: 47500, injected: 40200, utilized: 7300, combustion: 39900, process: 5600, fugitive: 2000 },
+                    { month: '2024-04', captured: 46900, injected: 39800, utilized: 7100, combustion: 39400, process: 5500, fugitive: 2000 },
+                    { month: '2024-05', captured: 48200, injected: 40800, utilized: 7400, combustion: 40500, process: 5700, fugitive: 2000 },
+                    { month: '2024-06', captured: 49100, injected: 41600, utilized: 7500, combustion: 41200, process: 5900, fugitive: 2000 },
+                    { month: '2024-07', captured: 50500, injected: 42800, utilized: 7700, combustion: 42400, process: 6100, fugitive: 2000 },
+                    { month: '2024-08', captured: 51200, injected: 43400, utilized: 7800, combustion: 43000, process: 6200, fugitive: 2000 },
+                    { month: '2024-09', captured: 49800, injected: 42200, utilized: 7600, combustion: 41800, process: 6000, fugitive: 2000 },
+                    { month: '2024-10', captured: 52100, injected: 44200, utilized: 7900, combustion: 43800, process: 6300, fugitive: 2000 },
+                    { month: '2024-11', captured: 51500, injected: 43700, utilized: 7800, combustion: 43300, process: 6200, fugitive: 2000 },
+                    { month: '2024-12', captured: 53200, injected: 45100, utilized: 8100, combustion: 44700, process: 6500, fugitive: 2000 }
+                ]
+            },
+            'baton-rouge': {
+                name: 'Baton Rouge Biofuel Facility',
+                parish: 'East Baton Rouge',
+                type: 'Bioenergy',
+                capacity: 1000000,
+                currentStored: 780000,
+                monthlyData: [
+                    { month: '2024-01', captured: 28500, injected: 24200, utilized: 4300, combustion: 22000, process: 4500, fugitive: 2000 },
+                    { month: '2024-02', captured: 27800, injected: 23600, utilized: 4200, combustion: 21500, process: 4300, fugitive: 2000 },
+                    { month: '2024-03', captured: 29900, injected: 25400, utilized: 4500, combustion: 23100, process: 4800, fugitive: 2000 },
+                    { month: '2024-04', captured: 29200, injected: 24800, utilized: 4400, combustion: 22600, process: 4600, fugitive: 2000 },
+                    { month: '2024-05', captured: 30100, injected: 25600, utilized: 4500, combustion: 23300, process: 4800, fugitive: 2000 },
+                    { month: '2024-06', captured: 30800, injected: 26200, utilized: 4600, combustion: 23800, process: 5000, fugitive: 2000 },
+                    { month: '2024-07', captured: 31500, injected: 26800, utilized: 4700, combustion: 24400, process: 5100, fugitive: 2000 },
+                    { month: '2024-08', captured: 32100, injected: 27300, utilized: 4800, combustion: 24900, process: 5200, fugitive: 2000 },
+                    { month: '2024-09', captured: 31200, injected: 26500, utilized: 4700, combustion: 24200, process: 5000, fugitive: 2000 },
+                    { month: '2024-10', captured: 32800, injected: 27900, utilized: 4900, combustion: 25400, process: 5400, fugitive: 2000 },
+                    { month: '2024-11', captured: 32300, injected: 27400, utilized: 4900, combustion: 25000, process: 5300, fugitive: 2000 },
+                    { month: '2024-12', captured: 33500, injected: 28400, utilized: 5100, combustion: 26000, process: 5500, fugitive: 2000 }
+                ]
+            },
+            'port-allen': {
+                name: 'Port Allen Pulp & Paper',
+                parish: 'Iberville',
+                type: 'Industrial',
+                capacity: 700000,
+                currentStored: 520000,
+                monthlyData: [
+                    { month: '2024-01', captured: 18200, injected: 15400, utilized: 2800, combustion: 12000, process: 4200, fugitive: 2000 },
+                    { month: '2024-02', captured: 17600, injected: 14900, utilized: 2700, combustion: 11600, process: 4000, fugitive: 2000 },
+                    { month: '2024-03', captured: 19100, injected: 16200, utilized: 2900, combustion: 12600, process: 4500, fugitive: 2000 },
+                    { month: '2024-04', captured: 18700, injected: 15900, utilized: 2800, combustion: 12300, process: 4400, fugitive: 2000 },
+                    { month: '2024-05', captured: 19300, injected: 16400, utilized: 2900, combustion: 12700, process: 4600, fugitive: 2000 },
+                    { month: '2024-06', captured: 19700, injected: 16700, utilized: 3000, combustion: 13000, process: 4700, fugitive: 2000 },
+                    { month: '2024-07', captured: 20200, injected: 17100, utilized: 3100, combustion: 13300, process: 4900, fugitive: 2000 },
+                    { month: '2024-08', captured: 20600, injected: 17500, utilized: 3100, combustion: 13600, process: 5000, fugitive: 2000 },
+                    { month: '2024-09', captured: 20000, injected: 17000, utilized: 3000, combustion: 13200, process: 4800, fugitive: 2000 },
+                    { month: '2024-10', captured: 21000, injected: 17800, utilized: 3200, combustion: 13900, process: 5100, fugitive: 2000 },
+                    { month: '2024-11', captured: 20700, injected: 17500, utilized: 3200, combustion: 13600, process: 5100, fugitive: 2000 },
+                    { month: '2024-12', captured: 21500, injected: 18200, utilized: 3300, combustion: 14200, process: 5300, fugitive: 2000 }
+                ]
+            }
+        };
+
+        // Chart instances (global for updates)
+        let charts = {};
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+
+            // Update all charts for dark mode
+            Object.keys(charts).forEach(key => {
+                if (charts[key]) {
+                    const textColor = isDark ? '#f1f5f9' : '#1e293b';
+                    const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+                    charts[key].options.plugins.legend.labels.color = textColor;
+                    charts[key].options.scales && Object.keys(charts[key].options.scales).forEach(scaleKey => {
+                        charts[key].options.scales[scaleKey].ticks.color = textColor;
+                        charts[key].options.scales[scaleKey].grid.color = gridColor;
+                    });
+                    charts[key].update();
+                }
+            });
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Export functionality
+        function exportData(section) {
+            alert(`Export functionality for ${section} would connect to backend API.\n\nThis would generate:\n- PDF Report\n- Excel Spreadsheet\n- JSON Data Export\n\nFeature ready for backend integration.`);
+        }
+
+        // Sort table
+        function sortTable(columnIndex) {
+            const table = document.getElementById('facilitiesTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent;
+                const bVal = b.cells[columnIndex].textContent;
+                return aVal.localeCompare(bVal, undefined, { numeric: true });
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ==================== CHART RENDERING ====================
+
+        function initCharts() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#f1f5f9' : '#1e293b';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+            // Aggregate data from all facilities
+            const months = facilitiesData['lake-charles'].monthlyData.map(d => {
+                const date = new Date(d.month);
+                return date.toLocaleDateString('en-US', { month: 'short' });
+            });
+
+            const totalCaptured = months.map((_, i) =>
+                Object.values(facilitiesData).reduce((sum, facility) =>
+                    sum + facility.monthlyData[i].captured, 0
+                )
+            );
+
+            const totalInjected = months.map((_, i) =>
+                Object.values(facilitiesData).reduce((sum, facility) =>
+                    sum + facility.monthlyData[i].injected, 0
+                )
+            );
+
+            const totalUtilized = months.map((_, i) =>
+                Object.values(facilitiesData).reduce((sum, facility) =>
+                    sum + facility.monthlyData[i].utilized, 0
+                )
+            );
+
+            // 1. Trend Chart
+            charts.trend = new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'CO₂ Captured',
+                            data: totalCaptured,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'CO₂ Injected',
+                            data: totalInjected,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'CO₂ Utilized',
+                            data: totalUtilized,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toLocaleString()} tons`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value.toLocaleString()
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            // 2. Source Pie Chart
+            const totalCombustion = Object.values(facilitiesData).reduce((sum, facility) =>
+                sum + facility.monthlyData.reduce((s, d) => s + d.combustion, 0), 0
+            );
+            const totalProcess = Object.values(facilitiesData).reduce((sum, facility) =>
+                sum + facility.monthlyData.reduce((s, d) => s + d.process, 0), 0
+            );
+            const totalFugitive = Object.values(facilitiesData).reduce((sum, facility) =>
+                sum + facility.monthlyData.reduce((s, d) => s + d.fugitive, 0), 0
+            );
+
+            charts.sourcePie = new Chart(document.getElementById('sourcePieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Combustion', 'Process', 'Fugitive'],
+                    datasets: [{
+                        data: [totalCombustion, totalProcess, totalFugitive],
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed.toLocaleString()} tons (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Sector Bar Chart
+            const sectorData = {
+                'Energy': facilitiesData['lake-charles'].monthlyData.reduce((s, d) => s + d.captured, 0),
+                'Bioenergy': facilitiesData['baton-rouge'].monthlyData.reduce((s, d) => s + d.captured, 0),
+                'Industrial': facilitiesData['port-allen'].monthlyData.reduce((s, d) => s + d.captured, 0)
+            };
+
+            charts.sectorBar = new Chart(document.getElementById('sectorBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(sectorData),
+                    datasets: [{
+                        label: '2024 Captured',
+                        data: Object.values(sectorData),
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.parsed.y.toLocaleString()} tons`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value.toLocaleString()
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 4. Emissions Timeline
+            charts.emissionsTimeline = new Chart(document.getElementById('emissionsTimelineChart'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Lake Charles',
+                            data: facilitiesData['lake-charles'].monthlyData.map(d => d.captured),
+                            borderColor: '#2563eb',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Baton Rouge',
+                            data: facilitiesData['baton-rouge'].monthlyData.map(d => d.captured),
+                            borderColor: '#10b981',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Port Allen',
+                            data: facilitiesData['port-allen'].monthlyData.map(d => d.captured),
+                            borderColor: '#f59e0b',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            // 5. Emission Type Chart
+            const combustionByMonth = months.map((_, i) =>
+                Object.values(facilitiesData).reduce((sum, facility) =>
+                    sum + facility.monthlyData[i].combustion, 0
+                )
+            );
+            const processByMonth = months.map((_, i) =>
+                Object.values(facilitiesData).reduce((sum, facility) =>
+                    sum + facility.monthlyData[i].process, 0
+                )
+            );
+
+            charts.emissionType = new Chart(document.getElementById('emissionTypeChart'), {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Combustion',
+                            data: combustionByMonth,
+                            backgroundColor: '#2563eb'
+                        },
+                        {
+                            label: 'Process',
+                            data: processByMonth,
+                            backgroundColor: '#10b981'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 6. Gas Composition
+            charts.gasComposition = new Chart(document.getElementById('gasCompositionChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['CO₂', 'CH₄ (CO₂e)', 'N₂O (CO₂e)'],
+                    datasets: [{
+                        data: [1150000, 75000, 17500],
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor }
+                        }
+                    }
+                }
+            });
+
+            // 7. Flow Chart (Sankey-style with stacked bar)
+            charts.flow = new Chart(document.getElementById('flowChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Captured', 'Transported', 'Stored', 'Utilized'],
+                    datasets: [{
+                        label: 'CO₂ Flow (tons)',
+                        data: [1242500, 1230000, 1055000, 175000],
+                        backgroundColor: ['#2563eb', '#1d4ed8', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.parsed.x.toLocaleString()} tons`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value.toLocaleString()
+                            },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 8. Capacity Chart
+            charts.capacity = new Chart(document.getElementById('capacityChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Lake Charles', 'Baton Rouge', 'Port Allen'],
+                    datasets: [
+                        {
+                            label: 'Used',
+                            data: [1170000, 780000, 520000],
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Available',
+                            data: [330000, 220000, 180000],
+                            backgroundColor: '#e2e8f0'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => (value / 1000000).toFixed(1) + 'M'
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 9. Pressure Chart
+            charts.pressure = new Chart(document.getElementById('pressureChart'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Pipeline LA-089',
+                            data: [2300, 2320, 2310, 2330, 2315, 2325, 2340, 2335, 2320, 2330, 2325, 2340],
+                            borderColor: '#2563eb',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Pipeline LA-112',
+                            data: [1850, 1860, 1855, 1870, 1865, 1875, 1880, 1885, 1870, 1880, 1875, 1890],
+                            borderColor: '#10b981',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value + ' PSI'
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            // 10. Parish Chart
+            charts.parish = new Chart(document.getElementById('parishChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Calcasieu', 'East Baton Rouge', 'Iberville'],
+                    datasets: [{
+                        label: 'CO₂ Captured (tons)',
+                        data: [588800, 369700, 236800],
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value.toLocaleString()
+                            },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 11. Credits Chart
+            charts.credits = new Chart(document.getElementById('creditsChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
+                    datasets: [
+                        {
+                            label: 'Storage Credits ($85/ton)',
+                            data: [21.2, 22.8, 23.5, 24.9],
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Utilization Credits ($60/ton)',
+                            data: [5.4, 5.8, 6.1, 6.5],
+                            backgroundColor: '#f59e0b'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: $${context.parsed.y}M`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => '$' + value + 'M'
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 12. Credit Split
+            charts.creditSplit = new Chart(document.getElementById('creditSplitChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Storage Credits', 'Utilization Credits'],
+                    datasets: [{
+                        data: [71, 29],
+                        backgroundColor: ['#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.label}: ${context.parsed}%`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 13. Jobs Chart
+            charts.jobs = new Chart(document.getElementById('jobsChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Calcasieu', 'East Baton Rouge', 'Iberville'],
+                    datasets: [
+                        {
+                            label: 'Direct Jobs',
+                            data: [245, 187, 142],
+                            backgroundColor: '#2563eb'
+                        },
+                        {
+                            label: 'Indirect Jobs',
+                            data: [98, 75, 100],
+                            backgroundColor: '#93c5fd'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 14. ROI Waterfall
+            charts.roi = new Chart(document.getElementById('roiChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Initial Investment', 'OPEX', '45Q Credits', 'CO₂ Sales', 'Net Profit'],
+                    datasets: [{
+                        data: [-250, -85, 94.2, 28, -212.8],
+                        backgroundColor: ['#ef4444', '#ef4444', '#10b981', '#10b981', '#2563eb']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => '$' + Math.abs(context.parsed.y) + 'M'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => '$' + value + 'M'
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 15. Forecast Chart
+            const historicalMonths = months.slice(0, 8);
+            const forecastMonths = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25'];
+            const allMonths = [...historicalMonths, ...forecastMonths];
+
+            const historicalData = totalCaptured.slice(0, 8);
+            const forecastData = new Array(8).fill(null).concat([102000, 106000, 110000, 114000, 118000, 122000, 126000, 130000]);
+            const upperBound = new Array(8).fill(null).concat([108000, 113000, 118000, 123000, 128000, 133000, 138000, 143000]);
+            const lowerBound = new Array(8).fill(null).concat([96000, 99000, 102000, 105000, 108000, 111000, 114000, 117000]);
+
+            charts.forecast = new Chart(document.getElementById('forecastChart'), {
+                type: 'line',
+                data: {
+                    labels: allMonths,
+                    datasets: [
+                        {
+                            label: 'Historical',
+                            data: [...historicalData, ...new Array(8).fill(null)],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Forecast',
+                            data: forecastData,
+                            borderColor: '#10b981',
+                            borderDash: [5, 5],
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Upper Bound (95%)',
+                            data: upperBound,
+                            borderColor: '#93c5fd',
+                            borderWidth: 1,
+                            fill: '+1',
+                            backgroundColor: 'rgba(147, 197, 253, 0.2)',
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Lower Bound (95%)',
+                            data: lowerBound,
+                            borderColor: '#93c5fd',
+                            borderWidth: 1,
+                            backgroundColor: 'rgba(147, 197, 253, 0.2)',
+                            tension: 0.4,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                callback: (value) => value.toLocaleString()
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            // 16. Correlation Chart
+            const productionData = [450, 438, 475, 469, 482, 491, 505, 512, 498, 521, 515, 532];
+
+            charts.correlation = new Chart(document.getElementById('correlationChart'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Production vs Emissions',
+                        data: productionData.map((prod, i) => ({ x: prod, y: totalCaptured[i] })),
+                        backgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'CO₂ Captured (tons)',
+                                color: textColor
+                            },
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Production Volume (units)',
+                                color: textColor
+                            },
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            // 17. Efficiency Chart
+            charts.efficiency = new Chart(document.getElementById('efficiencyChart'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Capture Efficiency (%)',
+                            data: [89, 90, 91, 91, 92, 92, 93, 93, 92, 94, 94, 95],
+                            borderColor: '#10b981',
+                            yAxisID: 'y',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Cost per Ton ($)',
+                            data: [65, 64, 62, 61, 60, 59, 58, 58, 57, 56, 56, 55],
+                            borderColor: '#f59e0b',
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Efficiency (%)',
+                                color: textColor
+                            },
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Cost ($)',
+                                color: textColor
+                            },
+                            ticks: { color: textColor },
+                            grid: { display: false }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate facilities table
+        function populateTable() {
+            const tbody = document.getElementById('facilitiesTableBody');
+            tbody.innerHTML = '';
+
+            Object.values(facilitiesData).forEach(facility => {
+                const totalCaptured = facility.monthlyData.reduce((sum, d) => sum + d.captured, 0);
+                const totalInjected = facility.monthlyData.reduce((sum, d) => sum + d.injected, 0);
+                const utilizationPct = ((facility.currentStored / facility.capacity) * 100).toFixed(0);
+
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${facility.name}</strong></td>
+                    <td>${facility.parish}</td>
+                    <td>${facility.type}</td>
+                    <td>${totalCaptured.toLocaleString()}</td>
+                    <td>${totalInjected.toLocaleString()}</td>
+                    <td><span class="status-badge success">96%</span></td>
+                    <td><span class="status-badge success">✅ Operational</span></td>
+                `;
+            });
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            populateTable();
+        });
+
+        // Handle date and facility filters
+        document.getElementById('dateStart').addEventListener('change', () => {
+            console.log('Date filter would update charts with filtered data');
+        });
+
+        document.getElementById('dateEnd').addEventListener('change', () => {
+            console.log('Date filter would update charts with filtered data');
+        });
+
+        document.getElementById('facilitySelector').addEventListener('change', (e) => {
+            console.log('Facility filter would update charts for:', e.target.value);
+        });
+    </script>
+</body>
+</html>
